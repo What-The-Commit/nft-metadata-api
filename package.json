@@ -1,0 +1,40 @@
+{
+    "name": "nft-metadata-api",
+    "version": "1.0.0",
+    "description": "Metadata API for NFTs (ERC721/ERC1155)",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/What-The-Commit/nft-metadata-api.git"
+    },
+    "keywords": [
+        "nft",
+        "erc721",
+        "erc1155",
+        "metadata",
+        "ethereum",
+        "opensea"
+    ],
+    "author": "What The Commit | Kevin Mauel",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "bugs": {
+        "url": "https://github.com/What-The-Commit/nft-metadata-api/issues"
+    },
+    "homepage": "https://github.com/What-The-Commit/nft-metadata-api#readme",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "node src/index.js"
+    },
+    "dependencies": {
+        "@awaitjs/express": "^0.9.0",
+        "async-sema": "^3.1.1",
+        "cors": "^2.8.5",
+        "dotenv": "^10.0.0",
+        "ethers": "^5.5.3",
+        "express": "^4.17.2",
+        "mongoose": "^6.1.5",
+        "mongoose-paginate-v2": "^1.5.0",
+        "node-fetch": "^3.1.0"
+    }
+}
