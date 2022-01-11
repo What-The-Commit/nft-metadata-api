@@ -20,7 +20,15 @@ const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
 
 const app = awaitjs.addAsync(express());
 
-app.use(cors());
+let corsWhitelist = process.env.CORS_ORIGINS.split(' ');
+
+corsWhitelist.push('https://localhost:' + process.env.HTTPS_PORT);
+corsWhitelist.push('https://127.0.0.1:' + process.env.HTTPS_PORT);
+
+app.use(cors({
+    origin: corsWhitelist
+}));
+
 app.use(express.json())
 
 app.use(function(request, response, next) {
@@ -47,6 +55,81 @@ app.getAsync('/nft/:contractAddress', async function (request, response, next) {
     }
 
     response.send(await models.Asset.paginate({contract: contractAddress}));
+});
+
+/**
+ * @example
+ * {
+ *     "filters": [
+ *         {"key": "traits.type", "value": "Origin"},
+ *         {"key": "traits.value", "value": "neptune"}
+ *     ]
+ * }
+ */
+app.postAsync('/nft/:contractAddress/lowest-price', async function (request, response, next) {
+    let contractAddress;
+
+    try {
+        contractAddress = ethers.utils.getAddress(request.params.contractAddress);
+    } catch (e) {
+        response.send('Invalid contract address');
+    }
+
+    let match = {
+        'contract': contractAddress,
+    };
+
+    if (request.body.hasOwnProperty('filters')) {
+        request.body.filters.forEach(function (filter) {
+            match[filter.key] = filter.value;
+        })
+    }
+
+    let aggregation = [
+        {
+            '$match': match
+        }, {
+            '$lookup': {
+                'from': 'orders',
+                'localField': 'tokenId',
+                'foreignField': 'tokenId',
+                'as': 'orders'
+            }
+        }, {
+            '$project': {
+                'order': {
+                    '$first': '$orders'
+                },
+                'orderCount': {
+                    '$cond': {
+                        'if': {
+                            '$isArray': '$orders'
+                        },
+                        'then': {
+                            '$size': '$orders'
+                        },
+                        'else': 0
+                    }
+                }
+            }
+        }, {
+            '$match': {
+                'orderCount': {
+                    '$gt': 0
+                }
+            }
+        }, {
+            '$sort': {
+                'order.price': 1
+            }
+        }, {
+            '$limit': 1
+        }
+    ];
+
+    const lowestPriceAggregation = await models.Asset.aggregate(aggregation);
+
+    response.send(lowestPriceAggregation);
 });
 
 /**
