@@ -21,9 +21,15 @@ const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
 
 const app = awaitjs.addAsync(express());
 
-/*apicache.options({
-    appendKey: (request, response) => btoa(JSON.stringify(request.body)),
-});*/
+apicache.options({
+    appendKey: function(request, response) {
+        if (request.href.indexOf('lowest-price') !== -1) {
+            return '';
+        }
+
+        return btoa(JSON.stringify(request.body));
+    }
+});
 
 const cache = apicache.middleware
 
