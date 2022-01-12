@@ -42,7 +42,7 @@ class IndexContract {
 
             let metadataCalls = [];
 
-            const rateLimit = RateLimit(20);
+            const rateLimit = RateLimit(process.env.ETHERS_PROVIDER_RATELIMIT_MIN, {timeUnit: 60000, uniformDistribution: true});
 
             for (let i = startingTokenId; i < totalSupply; i++) {
                 let tokenIdExists = indexedTokenIds.findIndex(function (indexedTokenId) {

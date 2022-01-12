@@ -8,6 +8,7 @@ import awaitjs from '@awaitjs/express';
 import models, {connectDb} from './models/index.js';
 import ethers from 'ethers';
 import IndexContract from "./indexing/indexContract.js";
+import apicache from 'apicache'
 
 env.config();
 
@@ -19,6 +20,8 @@ const credentials = {key: privateKey, cert: certificate};
 const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
 
 const app = awaitjs.addAsync(express());
+
+const cache = apicache.middleware
 
 let corsWhitelist = process.env.CORS_ORIGINS.split(' ');
 
@@ -41,7 +44,7 @@ app.use(function(request, response, next) {
 
 app.options('*', cors());
 
-app.getAsync('/nft/:contractAddress', async function (request, response, next) {
+app.getAsync('/nft/:contractAddress', cache('5 minutes'), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -50,11 +53,26 @@ app.getAsync('/nft/:contractAddress', async function (request, response, next) {
         response.send('Invalid contract address');
     }
 
-    if (parseInt(request.query.index) === 1) {
-        await indexContract.index(contractAddress);
+    response.send(await models.Asset.paginate({contract: contractAddress}));
+});
+
+app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (request, response, next) {
+    let contractAddress;
+
+    try {
+        contractAddress = ethers.utils.getAddress(request.params.contractAddress);
+    } catch (e) {
+        response.send('Invalid contract address');
     }
 
-    response.send(await models.Asset.paginate({contract: contractAddress}));
+    try {
+        await indexContract.index(contractAddress);
+    } catch (error) {
+        console.error(contractAddress, error);
+        response.send('An error occurred: ' + JSON.stringify(error));
+    }
+
+    response.redirect(request.href.replace('/index', ''));
 });
 
 /**
@@ -66,7 +84,7 @@ app.getAsync('/nft/:contractAddress', async function (request, response, next) {
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/lowest-price', async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -141,7 +159,7 @@ app.postAsync('/nft/:contractAddress/lowest-price', async function (request, res
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/token-ids', async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour'), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -194,7 +212,7 @@ app.postAsync('/nft/:contractAddress/token-ids', async function (request, respon
 });
 
 // `getAsync()` is like `app.get()`, but supports async functions
-app.getAsync('/', async function (req, res, next) {
+app.getAsync('/', cache('24 hours'), async function (req, res, next) {
     res.send('not what you\'re looking');
 });
 
