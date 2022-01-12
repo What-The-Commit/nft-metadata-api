@@ -143,7 +143,7 @@ app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async 
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/lowest-price', async function (request, response, next) {
     let contractAddress;
 
     try {
