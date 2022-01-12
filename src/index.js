@@ -21,6 +21,10 @@ const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
 
 const app = awaitjs.addAsync(express());
 
+apicache.options({
+    appendKey: (request, response) => btoa(JSON.stringify(request.body)),
+});
+
 const cache = apicache.middleware
 
 let corsWhitelist = process.env.CORS_ORIGINS.split(' ');
@@ -34,7 +38,7 @@ app.use(cors({
 
 app.use(express.json())
 
-app.use(function(request, response, next) {
+app.use(function (request, response, next) {
     if (!request.secure) {
         return response.redirect("https://" + request.headers.host.replace(process.env.HTTP_PORT, process.env.HTTPS_PORT) + request.url);
     }
@@ -73,6 +77,55 @@ app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (r
     }
 
     response.redirect(request.href.replace('/index', ''));
+});
+
+app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async function (request, response, next) {
+    let contractAddress;
+
+    try {
+        contractAddress = ethers.utils.getAddress(request.params.contractAddress);
+    } catch (e) {
+        response.send('Invalid contract address');
+    }
+
+    if (request.body.hasOwnProperty('filters') && request.params.value.indexOf('traits.value') !== -1 && request.body.filters[0].key === 'traits.type') {
+        const aggregation = [
+            {
+                '$match': {
+                    'contract': contractAddress
+                }
+            }, {
+                '$project': {
+                    'traits': {
+                        '$filter': {
+                            'input': '$traits',
+                            'as': 'trait',
+                            'cond': {
+                                '$eq': [
+                                    '$$trait.type', request.body.filters[0].value
+                                ]
+                            }
+                        }
+                    }
+                }
+            }, {
+                '$unwind': {
+                    'path': '$traits'
+                }
+            }, {
+                '$group': {
+                    '_id': '$traits.type',
+                    'distinctTraits': {
+                        '$addToSet': '$traits.value'
+                    }
+                }
+            }
+        ];
+
+        response.send(await models.Asset.aggregate(aggregation));
+    }
+
+    response.send(await models.Asset.distinct(request.params.value, {contract: contractAddress}).exec());
 });
 
 /**
