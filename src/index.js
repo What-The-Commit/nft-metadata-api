@@ -9,6 +9,7 @@ import models, {connectDb} from './models/index.js';
 import ethers from 'ethers';
 import IndexContract from "./indexing/indexContract.js";
 import apicache from 'apicache'
+import crypto from 'crypto';
 
 env.config();
 
@@ -23,11 +24,7 @@ const app = awaitjs.addAsync(express());
 
 apicache.options({
     appendKey: function(request, response) {
-        if (request.url.indexOf('lowest-price') !== -1) {
-            return '';
-        }
-
-        return btoa(JSON.stringify(request.body));
+        return crypto.createHash('sha256').update(JSON.stringify(request.body)).digest('hex');
     }
 });
 
@@ -143,7 +140,7 @@ app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async 
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/lowest-price', async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async function (request, response, next) {
     let contractAddress;
 
     try {
