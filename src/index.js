@@ -23,7 +23,7 @@ const app = awaitjs.addAsync(express());
 
 apicache.options({
     appendKey: function(request, response) {
-        if (request.href.indexOf('lowest-price') !== -1) {
+        if (request.url.indexOf('lowest-price') !== -1) {
             return '';
         }
 
