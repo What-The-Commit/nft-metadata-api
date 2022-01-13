@@ -63,7 +63,7 @@ app.getAsync('/nft/:contractAddress', cache('5 minutes'), async function (reques
     response.send(await models.Asset.paginate({contract: contractAddress}));
 });
 
-app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (request, response, next) {
+/*app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -80,7 +80,7 @@ app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (r
     }
 
     response.redirect(request.href.replace('/index', ''));
-});
+});*/
 
 app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async function (request, response, next) {
     let contractAddress;
