@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import express from 'express';
 import http from 'http';
 import https from 'https';
