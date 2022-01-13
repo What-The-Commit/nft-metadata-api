@@ -11,8 +11,11 @@ import ethers from 'ethers';
 import IndexContract from "./indexing/indexContract.js";
 import apicache from 'apicache'
 import crypto from 'crypto';
+import OpenseaApi from "./api/opensea/opensea-api.js";
 
 env.config();
+
+const openseaApi = new OpenseaApi(ethers.utils, process.env.OPENSEA_API_KEY);
 
 const privateKey = filesystem.readFileSync(process.env.SSL_PRIVATE_KEY);
 const certificate = filesystem.readFileSync(process.env.SSL_CERT);
@@ -63,25 +66,6 @@ app.getAsync('/nft/:contractAddress', cache('5 minutes'), async function (reques
 
     response.send(await models.Asset.paginate({contract: contractAddress}));
 });
-
-/*app.getAsync('/nft/:contractAddress/index', cache('24 hours'), async function (request, response, next) {
-    let contractAddress;
-
-    try {
-        contractAddress = ethers.utils.getAddress(request.params.contractAddress);
-    } catch (e) {
-        response.send('Invalid contract address');
-    }
-
-    try {
-        await indexContract.index(contractAddress);
-    } catch (error) {
-        console.error(contractAddress, error);
-        response.send('An error occurred: ' + JSON.stringify(error));
-    }
-
-    response.redirect(request.href.replace('/index', ''));
-});*/
 
 app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async function (request, response, next) {
     let contractAddress;
@@ -150,6 +134,24 @@ app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async funct
         response.send('Invalid contract address');
     }
 
+    if (await models.Order.exists({contract: contractAddress}) === false) {
+        let tokenId = null;
+
+        if (request.body.hasOwnProperty('filters') && request.body.filters[0] !== undefined && request.body.filters[0].key === 'tokenId') {
+            tokenId = request.body.filters[0].value;
+        }
+
+        let lowestPrice = await openseaApi.getLowestPriceOfAssetByContractAndId(contractAddress, tokenId);
+
+        response.send([{
+            order: {
+                price: {
+                    '$numberDecimal': lowestPrice
+                }
+            }
+        }]);
+    }
+
     let match = {
         'contract': contractAddress,
     };
@@ -163,42 +165,56 @@ app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async funct
     let aggregation = [
         {
             '$match': match
-        }, {
+        },    {
             '$lookup': {
                 'from': 'orders',
-                'localField': 'tokenId',
-                'foreignField': 'tokenId',
+                'let': {
+                    'assetContract': '$contract',
+                    'assetTokenId': '$tokenId'
+                },
+                'pipeline': [
+                    {
+                        '$match': {
+                            '$expr': {
+                                '$and': [
+                                    {
+                                        '$eq': [
+                                            '$contract', '$$assetContract'
+                                        ]
+                                    }, {
+                                        '$eq': [
+                                            '$tokenId', '$$assetTokenId'
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
                 'as': 'orders'
             }
         }, {
-            '$project': {
-                'order': {
-                    '$first': '$orders'
-                },
-                'orderCount': {
-                    '$cond': {
-                        'if': {
-                            '$isArray': '$orders'
-                        },
-                        'then': {
-                            '$size': '$orders'
-                        },
-                        'else': 0
-                    }
-                }
-            }
-        }, {
             '$match': {
-                'orderCount': {
-                    '$gt': 0
+                '$expr': {
+                    '$gt': [
+                        {
+                            '$size': '$orders'
+                        }, 0
+                    ]
                 }
             }
         }, {
             '$sort': {
-                'order.price': 1
+                'orders.price': 1
             }
         }, {
             '$limit': 1
+        }, {
+            '$project': {
+                'order': {
+                    '$first': '$orders'
+                }
+            }
         }
     ];
 

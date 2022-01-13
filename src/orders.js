@@ -123,24 +123,24 @@ connectDb().then(async function () {
                     log('Order found for ' + order.asset.name, 'debug');
 
                     let existsOrder = await models.Order.exists({
-                        contract: order.asset.asset_contract.address,
+                        contract: contractAddress,
                         tokenId: order.asset.token_id,
                         type: 'opensea'
                     });
 
                     let isNewerOrder = await models.Order.exists({
-                        contract: order.asset.asset_contract.address,
+                        contract: contractAddress,
                         tokenId: order.asset.token_id,
                         type: 'opensea',
                         createdDate: { $gt: order.created_date }
                     });
 
                     if (isNewerOrder) {
-                        await models.Order.updateFromOpenseaOrder(order);
+                        await models.Order.updateFromOpenseaOrder(contractAddress, order);
                     }
 
                     if (!isNewerOrder && !existsOrder) {
-                        await models.Order.createFromOpenseaOrder(order);
+                        await models.Order.createFromOpenseaOrder(contractAddress, order);
                     }
                 }
             })

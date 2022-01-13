@@ -25,11 +25,11 @@ class Metadata {
         try {
             switch (metadata.protocol) {
                 case "ipfs:":
-                    response = await fetch('https://ipfs.io/ipfs/' + metadata.host + metadata.pathname);
+                    response = await fetch('https://ipfs.io/' + metadata.host + metadata.pathname);
                     responseBody = await response.text();
 
                     if (responseBody.indexOf('invalid ipfs path: ') !== -1) {
-                        throw {message: responseBody, usedUrl: 'https://ipfs.io/ipfs/' + metadata.host};
+                        throw {message: responseBody, usedUrl: 'https://ipfs.io/' + metadata.host};
                     }
 
                     responseBody = JSON.parse(responseBody);
@@ -38,7 +38,6 @@ class Metadata {
                     return responseBody;
                 case "http:":
                 case "https:":
-                    console.log(metadata.href, metadata);
                     response = await fetch(metadata.href);
                     responseBody = await response.json();
 

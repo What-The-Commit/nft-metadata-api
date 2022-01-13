@@ -53,10 +53,10 @@ schema.plugin(mongoosePaginate);
 
 const Order = mongoose.model('Order', schema);
 
-Order.createFromOpenseaOrder = function (OpenseaOrder) {
+Order.createFromOpenseaOrder = function (contractAddress, OpenseaOrder) {
     return this.create({
         name: OpenseaOrder.asset.name,
-        contract: OpenseaOrder.asset.asset_contract.address,
+        contract: contractAddress,
         tokenId: OpenseaOrder.asset.token_id,
         type: 'opensea',
         createdDate: OpenseaOrder.created_date,
@@ -67,7 +67,7 @@ Order.createFromOpenseaOrder = function (OpenseaOrder) {
     });
 };
 
-Order.updateFromOpenseaOrder = function (OpenseaOrder) {
+Order.updateFromOpenseaOrder = function (contractAddress, OpenseaOrder) {
     return this.updateOne(
         {
             contract: OpenseaOrder.asset.asset_contract.address,
