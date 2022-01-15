@@ -284,7 +284,12 @@ app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour'), async function
     response.send(tokenIdAggregation);
 });
 
-// `getAsync()` is like `app.get()`, but supports async functions
+app.getAsync('/ens/resolve/:name', cache('7 days'), async function (req, res, next) {
+    const provider = new ethers.providers.JsonRpcProvider(process.env.ETHERS_PROVIDER);
+
+    res.send(await provider.resolveName(req.params.name));
+});
+
 app.getAsync('/', cache('24 hours'), async function (req, res, next) {
     res.send('not what you\'re looking');
 });
