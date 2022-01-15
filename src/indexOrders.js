@@ -9,13 +9,6 @@ env.config();
 connectDb().then(async function () {
     const logger = new Logger(console, process.env.NODE_ENV);
 
-    const contractAddresses = process.argv[2];
-
-    if (contractAddresses === undefined) {
-        console.info('Please provide contract addresses');
-        process.exit();
-    }
-
     let contracts = process.argv[2].split(',');
 
     if (contracts[0] === undefined) {
