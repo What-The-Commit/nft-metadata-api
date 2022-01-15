@@ -3,15 +3,20 @@ import env from 'dotenv';
 import models, {connectDb} from './models/index.js';
 import IndexOrders from './indexing/indexOrders.js';
 import Logger from "./logger/logger.js";
+import {compileTrust} from "express/lib/utils.js";
 
 env.config();
 
 connectDb().then(async function () {
     const logger = new Logger(console, process.env.NODE_ENV);
 
-    let contracts = process.argv[2].split(',');
+    let contracts = process.argv[2];
 
-    if (contracts[0] === undefined) {
+    if (contracts !== undefined) {
+        contracts = contracts.split(',');
+    }
+
+    if (contracts === undefined) {
         contracts = await models.Asset.distinct('contract').exec();
     }
 
