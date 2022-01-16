@@ -12,10 +12,12 @@ import IndexContract from "./indexing/indexContract.js";
 import apicache from 'apicache'
 import crypto from 'crypto';
 import OpenseaApi from "./api/opensea/opensea-api.js";
+import EthersCommon from "./api/ethers/common.js";
 
 env.config();
 
 const openseaApi = new OpenseaApi(ethers.utils, 0, process.env.OPENSEA_API_KEY);
+const ethersCommon = new EthersCommon(process.env.ETHERS_PROVIDER);
 
 const privateKey = filesystem.readFileSync(process.env.SSL_PRIVATE_KEY);
 const certificate = filesystem.readFileSync(process.env.SSL_CERT);
@@ -295,6 +297,35 @@ app.getAsync('/ens/resolve/:name', cache('7 days', onlyStatus200), async functio
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHERS_PROVIDER);
 
     res.send(await provider.resolveName(req.params.name));
+});
+
+app.postAsync('/nft/:contractAddress/total-supply', cache('24 hours', onlyStatus200), async function (request, response, next) {
+    let tokenId = null;
+    let type;
+
+    if (request.body.hasOwnProperty('type')) {
+        type = request.body.type;
+    }
+
+    if (type === undefined) {
+        response.status(400);
+        response.send('Please provide type with either ERC721 or ERC1155 in body');
+        return;
+    }
+
+    if (request.body.hasOwnProperty('filters') && request.body.filters[0] !== undefined && request.body.filters[0].key === 'tokenId') {
+        if (type === 'ERC721') {
+            response.status(400);
+            response.send('ERC721 cannot have tokenId');
+            return;
+        }
+
+        tokenId = request.body.filters[0].value;
+    }
+
+    const totalSupply = await ethersCommon.getTotalSupplyByContractAddressAndType(request.params.contractAddress, type, tokenId);
+
+    response.send(totalSupply.toString());
 });
 
 app.getAsync('/', cache('24 hours', onlyStatus200), async function (req, res, next) {
