@@ -2,9 +2,8 @@ import fetch from "node-fetch";
 import ethers from "ethers";
 
 class Metadata {
-    constructor(ethersProvider, ipfsRateLimit) {
+    constructor(ethersProvider) {
         this.ethersProvider = new ethers.providers.JsonRpcProvider(ethersProvider);
-        this.ipfsRateLimit = ipfsRateLimit;
     }
 
     async getMetadata(contractAddress, tokenId) {
@@ -26,15 +25,13 @@ class Metadata {
         try {
             switch (metadata.protocol) {
                 case "ipfs:":
-                    await this.ipfsRateLimit();
-
-                    response = await fetch('https://gateway.pinata.cloud/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
+                    response = await fetch('https://ipfs.io/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
                     responseBody = await response.text();
 
                     if (responseBody.indexOf('invalid ipfs path: ') !== -1) {
                         let error = new Error('IPFS metadata error');
                         error.responseBody = responseBody;
-                        error.url = 'https://gateway.pinata.cloud/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname;
+                        error.url = 'https://ipfs.io/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname;
 
                         throw error;
                     }
