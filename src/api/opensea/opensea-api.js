@@ -15,10 +15,11 @@ class OpenseaApi {
 
     async _doFetch(queryString, config = null) {
         if (config === null) {
-            config = { method: 'GET' };
-            if (this.apiKey !== null) {
-                config['headers'] = {'X-API-KEY': this.apiKey}
-            }
+            config = { method: 'GET'};
+        }
+
+        if (this.apiKey !== null) {
+            config['headers'] = {'X-API-KEY': this.apiKey}
         }
 
         return await fetch(this.baseUrl + queryString, config);
@@ -50,6 +51,14 @@ class OpenseaApi {
         }
     
         let response = await this._doFetch('assets?' + params.toString());
+
+        if (response.status !== 200) {
+            let error = new Error('Opensea request failed');
+            error.response = response;
+
+            throw error;
+        }
+
         let data = await response.json();
     
         if (data.assets.length === 0) {

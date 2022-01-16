@@ -25,11 +25,15 @@ class Metadata {
         try {
             switch (metadata.protocol) {
                 case "ipfs:":
-                    response = await fetch('https://ipfs.io/' + metadata.host + metadata.pathname);
+                    response = await fetch('https://gateway.pinata.cloud/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
                     responseBody = await response.text();
 
                     if (responseBody.indexOf('invalid ipfs path: ') !== -1) {
-                        throw {message: responseBody, usedUrl: 'https://ipfs.io/' + metadata.host};
+                        let error = new Error('IPFS metadata error');
+                        error.responseBody = responseBody;
+                        error.url = 'https://gateway.pinata.cloud/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname;
+
+                        throw error;
                     }
 
                     responseBody = JSON.parse(responseBody);

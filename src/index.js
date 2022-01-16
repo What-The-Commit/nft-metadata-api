@@ -15,7 +15,7 @@ import OpenseaApi from "./api/opensea/opensea-api.js";
 
 env.config();
 
-const openseaApi = new OpenseaApi(ethers.utils, process.env.OPENSEA_API_KEY);
+const openseaApi = new OpenseaApi(ethers.utils, 0, process.env.OPENSEA_API_KEY);
 
 const privateKey = filesystem.readFileSync(process.env.SSL_PRIVATE_KEY);
 const certificate = filesystem.readFileSync(process.env.SSL_CERT);
@@ -32,7 +32,8 @@ apicache.options({
     }
 });
 
-const cache = apicache.middleware
+const cache = apicache.middleware;
+const onlyStatus200 = (req, res) => res.statusCode === 200;
 
 let corsWhitelist = process.env.CORS_ORIGINS.split(' ');
 
@@ -55,7 +56,7 @@ app.use(function (request, response, next) {
 
 app.options('*', cors());
 
-app.getAsync('/nft/:contractAddress', cache('5 minutes'), async function (request, response, next) {
+app.getAsync('/nft/:contractAddress', cache('5 minutes', onlyStatus200), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -67,7 +68,7 @@ app.getAsync('/nft/:contractAddress', cache('5 minutes'), async function (reques
     response.send(await models.Asset.paginate({contract: contractAddress}));
 });
 
-app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours', onlyStatus200), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -125,7 +126,7 @@ app.postAsync('/nft/:contractAddress/distinct/:value', cache('24 hours'), async 
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour', onlyStatus200), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -141,7 +142,15 @@ app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async funct
             tokenId = request.body.filters[0].value;
         }
 
-        let lowestPrice = await openseaApi.getLowestPriceOfAssetByContractAndId(contractAddress, tokenId);
+        let lowestPrice;
+
+        try {
+            lowestPrice = await openseaApi.getLowestPriceOfAssetByContractAndId(contractAddress, tokenId);
+        } catch (e) {
+            console.error(e);
+            response.status(e.response.status);
+            response.send(e.message);
+        }
 
         response.send([{
             order: {
@@ -232,7 +241,7 @@ app.postAsync('/nft/:contractAddress/lowest-price', cache('1 hour'), async funct
  *     ]
  * }
  */
-app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour'), async function (request, response, next) {
+app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour', onlyStatus200), async function (request, response, next) {
     let contractAddress;
 
     try {
@@ -250,8 +259,6 @@ app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour'), async function
             match[filter.key] = filter.value;
         })
     }
-
-    console.log(request.body);
 
     const tokenIdAggregation = await models.Asset.aggregate([
         {
@@ -284,13 +291,13 @@ app.postAsync('/nft/:contractAddress/token-ids', cache('1 hour'), async function
     response.send(tokenIdAggregation);
 });
 
-app.getAsync('/ens/resolve/:name', cache('7 days'), async function (req, res, next) {
+app.getAsync('/ens/resolve/:name', cache('7 days', onlyStatus200), async function (req, res, next) {
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHERS_PROVIDER);
 
     res.send(await provider.resolveName(req.params.name));
 });
 
-app.getAsync('/', cache('24 hours'), async function (req, res, next) {
+app.getAsync('/', cache('24 hours', onlyStatus200), async function (req, res, next) {
     res.send('not what you\'re looking');
 });
 
