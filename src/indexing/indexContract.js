@@ -7,7 +7,7 @@ import Metadata from "./metadata.js";
 class IndexContract {
     constructor(ethersProvider) {
         this.ethersProvider = new ethers.providers.JsonRpcProvider(ethersProvider);
-        this.metadata = new Metadata(ethersProvider, RateLimit(180, {timeUnit: 60000, uniformDistribution: true}));
+        this.metadata = new Metadata(ethersProvider, RateLimit(170, {timeUnit: 60000, uniformDistribution: true}));
     }
 
     async index(contractAddress) {
