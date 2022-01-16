@@ -2,8 +2,9 @@ import fetch from "node-fetch";
 import ethers from "ethers";
 
 class Metadata {
-    constructor(ethersProvider) {
+    constructor(ethersProvider, ipfsRateLimit) {
         this.ethersProvider = new ethers.providers.JsonRpcProvider(ethersProvider);
+        this.ipfsRateLimit = ipfsRateLimit;
     }
 
     async getMetadata(contractAddress, tokenId) {
@@ -25,6 +26,8 @@ class Metadata {
         try {
             switch (metadata.protocol) {
                 case "ipfs:":
+                    await this.ipfsRateLimit();
+
                     response = await fetch('https://gateway.pinata.cloud/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
                     responseBody = await response.text();
 
