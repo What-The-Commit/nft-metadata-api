@@ -5,9 +5,9 @@ import Asset from "../models/asset.js";
 import Metadata from "./metadata.js";
 
 class IndexContract {
-    constructor(ethersProvider) {
+    constructor(ethersProvider, ipfsHost) {
         this.ethersProvider = new ethers.providers.JsonRpcProvider(ethersProvider);
-        this.metadata = new Metadata(ethersProvider);
+        this.metadata = new Metadata(ethersProvider, ipfsHost);
     }
 
     async index(contractAddress) {
@@ -42,8 +42,6 @@ class IndexContract {
 
             let metadataCalls = [];
 
-            const rateLimit = RateLimit(process.env.ETHERS_PROVIDER_RATELIMIT_MIN, {timeUnit: 60000, uniformDistribution: true});
-
             for (let i = startingTokenId; i < totalSupply; i++) {
                 let tokenIdExists = indexedTokenIds.findIndex(function (indexedTokenId) {
                    if (indexedTokenId.tokenId === i) {
@@ -54,8 +52,6 @@ class IndexContract {
                 if (tokenIdExists !== -1) {
                     continue;
                 }
-
-                await rateLimit();
 
                 let call = this.metadata.getMetadata(contractAddress, i);
 

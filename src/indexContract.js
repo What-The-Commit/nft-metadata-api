@@ -6,7 +6,7 @@ import IndexContract from "./indexing/indexContract.js";
 env.config();
 
 connectDb().then(async function () {
-    const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
+    const indexContract = new IndexContract(process.env.ETHERS_PROVIDER, process.env.IPFS_HOST);
 
     const contractAddresses = process.argv[2];
 

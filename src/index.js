@@ -8,7 +8,6 @@ import env from 'dotenv';
 import awaitjs from '@awaitjs/express';
 import models, {connectDb} from './models/index.js';
 import ethers from 'ethers';
-import IndexContract from "./indexing/indexContract.js";
 import apicache from 'apicache'
 import crypto from 'crypto';
 import OpenseaApi from "./api/opensea/opensea-api.js";
@@ -23,8 +22,6 @@ const privateKey = filesystem.readFileSync(process.env.SSL_PRIVATE_KEY);
 const certificate = filesystem.readFileSync(process.env.SSL_CERT);
 
 const credentials = {key: privateKey, cert: certificate};
-
-const indexContract = new IndexContract(process.env.ETHERS_PROVIDER);
 
 const app = awaitjs.addAsync(express());
 

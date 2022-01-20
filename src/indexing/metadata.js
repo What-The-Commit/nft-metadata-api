@@ -2,8 +2,9 @@ import fetch from "node-fetch";
 import ethers from "ethers";
 
 class Metadata {
-    constructor(ethersProvider) {
+    constructor(ethersProvider, ipfsHost) {
         this.ethersProvider = new ethers.providers.JsonRpcProvider(ethersProvider);
+        this.ipfsHost = ipfsHost;
     }
 
     async getMetadata(contractAddress, tokenId) {
@@ -25,7 +26,7 @@ class Metadata {
         try {
             switch (metadata.protocol) {
                 case "ipfs:":
-                    response = await fetch('https://ipfs.io/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
+                    response = await fetch(this.ipfsHost + '/ipfs/' + metadata.host.replace('ipfs/', '') + metadata.pathname);
                     responseBody = await response.text();
 
                     if (responseBody.indexOf('invalid ipfs path: ') !== -1) {
