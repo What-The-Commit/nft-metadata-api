@@ -18,8 +18,11 @@ class OpenseaApi {
             config = {
                 method: 'GET',
                 retryOptions: {
-                    retryMaxDuration: 4000,
-                    retryInitialDelay: 500,
+                    retryMaxDuration: 16000,
+                    retryInitialDelay: 1000,
+                    retryDelay: function(attempt, error, response) {
+                        return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
+                    },
                     retryOnHttpResponse: function (response) {
                         if ( response.status === 429) { // retry on rate limit
                             return true;
