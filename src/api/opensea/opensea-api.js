@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from "@adobe/node-fetch-retry";
 
 class OpenseaApi {
     constructor(etherUtils, ethPriceInUsd, apiKey = null, maxPercentagePriceDrop = 0.9, baseUrl = 'https://api.opensea.io/api/v1/') {
@@ -15,7 +15,18 @@ class OpenseaApi {
 
     async _doFetch(queryString, config = null) {
         if (config === null) {
-            config = { method: 'GET'};
+            config = {
+                method: 'GET',
+                retryOptions: {
+                    retryMaxDuration: 4000,
+                    retryInitialDelay: 500,
+                    retryOnHttpResponse: function (response) {
+                        if ( response.status === 429) { // retry on rate limit
+                            return true;
+                        }
+                    }
+                }
+            };
         }
 
         if (this.apiKey !== null) {
