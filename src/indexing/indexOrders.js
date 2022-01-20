@@ -106,9 +106,9 @@ class IndexOrders {
 
             call
                 .then(async function (orderResponse) {
-                    if (orderResponse.status === 429) {
-                        this.log.error('Opensea is rate limiting, wait a minute and try again with a lower RATELIMIT_MIN setting');
-                        throw {message: 'Opensea is rate limiting, wait a minute and try again with a lower RATELIMIT_MIN setting', context: orderResponse};
+                    if (orderResponse.status >= 400) {
+                        this.log.error('Opensea Api is unavailable');
+                        throw {message: 'Opensea Api is unavailable', context: orderResponse};
                     }
 
                     let orderData = await orderResponse.json();
