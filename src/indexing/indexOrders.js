@@ -1,8 +1,8 @@
 import ethers from "ethers";
 import {RateLimit} from "async-sema";
 import lodash from "lodash";
-import fetch from "node-fetch";
 import models from "../models/index.js";
+import fetch from "@adobe/node-fetch-retry";
 
 class IndexOrders {
     constructor(
@@ -65,7 +65,19 @@ class IndexOrders {
         for (const chunksOfTokenIds of lodash.chunk(tokenIds, chunks)) {
             const options = {
                 method: 'GET',
-                headers: {Accept: 'application/json', 'X-API-KEY': process.env.OPENSEA_API_KEY}
+                headers: {Accept: 'application/json', 'X-API-KEY': process.env.OPENSEA_API_KEY},
+                retryOptions: {
+                    retryMaxDuration: 32000,
+                    retryInitialDelay: 1000,
+                    retryDelay: function(attempt, error, response) {
+                        return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
+                    },
+                    retryOnHttpResponse: function (response) {
+                        if ( response.status === 429) { // retry on rate limit
+                            return true;
+                        }
+                    }
+                }
             };
 
             let params = new URLSearchParams({
