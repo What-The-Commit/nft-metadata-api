@@ -26,6 +26,7 @@ const credentials = {key: privateKey, cert: certificate};
 const app = awaitjs.addAsync(express());
 
 apicache.options({
+    headerBlacklist:  ['access-control-allow-origin'],
     appendKey: function(request, response) {
         return crypto.createHash('sha256').update(JSON.stringify(request.body)).digest('hex');
     }
