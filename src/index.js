@@ -12,6 +12,7 @@ import apicache from 'apicache'
 import crypto from 'crypto';
 import OpenseaApi from "./api/opensea/opensea-api.js";
 import EthersCommon from "./api/ethers/common.js";
+import compression from "compression";
 
 env.config();
 
@@ -44,7 +45,26 @@ app.use(cors({
     origin: corsWhitelist
 }));
 
-app.use(express.json())
+app.use(express.json());
+
+const shouldCompress = (req, res) => {
+    if (req.headers['x-no-compression']) {
+        // don't compress responses if this request header is present
+        return false;
+    }
+
+    // fallback to standard compression
+    return compression.filter(req, res);
+};
+
+app.use(compression({
+    // filter decides if the response should be compressed or not,
+    // based on the `shouldCompress` function above
+    filter: shouldCompress,
+    // threshold is the byte threshold for the response body size
+    // before compression is considered, the default is 1kb
+    threshold: 0
+}));
 
 app.use(function (request, response, next) {
     if (!request.secure) {
