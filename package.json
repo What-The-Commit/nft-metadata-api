@@ -24,7 +24,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "node src/index.js"
+        "start": "node src/index.js",
+        "index-gfc-weapons": "node src/indexContract.js --contract=\"0xcbc964dd716f07b4965b4526e30541a66f414ccf\" --provider=\"https://speedy-nodes-nyc.moralis.io/4bdc28473b549df902238ed0/polygon/mainnet\" --network=\"matic\" --erc1155 --tokenId=11002 --tokenId=21001 --tokenId=11000 --tokenId=11001 --tokenId=12001 --tokenId=22002 --tokenId=22000 --tokenId=22003 --tokenId=12000 --tokenId=13000 --tokenId=23010 --tokenId=23009 --tokenId=23008 --tokenId=23006 --tokenId=23003 --tokenId=23005 --tokenId=23002 --tokenId=23004 --tokenId=23001 --tokenId=23007 --tokenId=23000 --tokenId=14000 --tokenId=22001 --tokenId=13001 --tokenId=14001 --tokenId=14002 --tokenId=24004 --tokenId=24001 --tokenId=24002 --tokenId=15001 --tokenId=24000 --tokenId=24003 --tokenId=16000 --tokenId=25002 --tokenId=25000 --tokenId=25001 --tokenId=24005 --tokenId=26000 --tokenId=26001 --tokenId=25005 --tokenId=17000 --tokenId=25004 --tokenId=18000 --tokenId=25003 --tokenId=28000 --tokenId=27000"
     },
     "dependencies": {
         "@adobe/node-fetch-retry": "^2.0.0",
@@ -40,6 +41,7 @@
         "mongoose": "^6.1.5",
         "mongoose-long": "^0.5.1",
         "mongoose-paginate-v2": "^1.5.0",
-        "node-fetch": "^3.1.0"
+        "node-fetch": "^3.1.0",
+        "yargs": "^17.4.0"
     }
 }

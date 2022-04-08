@@ -1,9 +1,8 @@
 import {utils} from 'ethers';
 import env from 'dotenv';
 import models, {connectDb} from './models/index.js';
-import IndexOrders from './indexing/indexOrders.js';
+import IndexOrders from './indexing/IndexOrders.js';
 import Logger from "./logger/logger.js";
-import {compileTrust} from "express/lib/utils.js";
 
 env.config();
 
